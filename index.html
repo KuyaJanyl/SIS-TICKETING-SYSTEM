@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Splash Screen - Shalom Ticket System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Gradient Background — Replace with your logo's dominant colors */
+    .splash-bg {
+      background: linear-gradient(135deg, #14b8a6, #22c55e); /* Teal → Green */
+    }
+
+    /* Fade In & Slide Up Animation */
+    @keyframes fadeSlideUp {
+      0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .fade-in {
+      animation: fadeSlideUp 1.2s ease-out forwards;
+    }
+
+    /* Spinner Animation */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Icon styling */
+    .icon-circle {
+      width: 8rem;
+      height: 8rem;
+      background-color: white;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+    }
+    .icon-circle svg {
+      width: 4rem;
+      height: 4rem;
+      color: #14b8a6;
+    }
+  </style>
+</head>
+<body class="splash-bg min-h-screen flex items-center justify-center">
+
+  <div class="text-center text-white fade-in">
+    <!-- Headset / Help Desk Icon -->
+    <div class="icon-circle mx-auto mb-6">
+      <!-- Heroicons "Headset" icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 1a9 9 0 0 0-9 9v5a4 4 0 0 0 4 4h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H7v-3a5 5 0 0 1 10 0v3h-1a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h1a4 4 0 0 0 4-4v-5a9 9 0 0 0-9-9z"/>
+      </svg>
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-4xl font-bold mb-2 drop-shadow-lg">Shalom Ticket System</h1>
+
+    <!-- Motto -->
+    <p class="text-lg opacity-90 mb-6">Ang Lab na Para Sayo</p>
+
+    <!-- Spinner -->
+    <div class="spinner mx-auto"></div>
+  </div>
+
+  <script>
+    // Redirect after 3 seconds
+    setTimeout(() => {
+      window.location.href = "login.html"; // Change to your homepage
+    }, 3000);
+  </script>
+
+</body>
+</html>

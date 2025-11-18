@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shalom Ticket System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Light Teal & Green Theme */
+    .bg-header {
+      background: linear-gradient(135deg, #14b8a6, #22c55e);
+    }
+    .btn-primary {
+      background-color: #14b8a6;
+    }
+    .btn-primary:hover {
+      background-color: #0d9488;
+    }
+    .btn-secondary {
+      background-color: #22c55e;
+    }
+    .btn-secondary:hover {
+      background-color: #16a34a;
+    }
+  </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDvtwYFWIYqyoOA3fB3d9LfNadMPwB04aU",
+      authDomain: "shalomlabapps.firebaseapp.com",
+      databaseURL: "https://shalomlabapps-default-rtdb.firebaseio.com",
+      projectId: "shalomlabapps",
+      storageBucket: "shalomlabapps.firebasestorage.app",
+      messagingSenderId: "491098279306",
+      appId: "1:491098279306:web:ab80d08ab64b27ae80cc73",
+      measurementId: "G-2J6GD16PK9"
+    };
+
+    // Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Check authentication and role
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const role = userDoc.data().role || "user";
+          if (role === "admin") {
+            window.location.href = "admin.html";
+          }
+        } else {
+          alert("No user data found. Please log in again.");
+          await signOut(auth);
+          window.location.href = "login.html";
+        }
+      }
+    });
+  </script>
+</head>
+<body class="bg-gradient-to-r from-green-50 via-white to-teal-50 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-header text-white shadow-md py-6">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-3xl font-semibold">Shalom Ticket System</h1>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center px-4">
+    <div class="max-w-xl bg-white rounded-lg shadow-lg p-10 text-center border border-gray-200">
+      <img src="shalomlaboratorylogo.png" alt="Shalom Laboratory Logo" class="w-24 mx-auto mb-4">
+      <h2 class="text-4xl font-bold mb-6 text-teal-700">Welcome!</h2>
+      <p class="text-gray-700 text-lg mb-8">
+        Submit and track your IT support requests easily.<br />
+        Fast, simple, and reliable.
+      </p>
+      <!-- Submit Ticket Button -->
+      <a href="tickets.html" class="block mb-4 px-8 py-3 text-white rounded-md shadow btn-primary transition">
+        Submit a Ticket
+      </a>
+      <!-- My Tickets Button -->
+      <a href="my-tickets.html" class="block px-8 py-3 text-white rounded-md shadow btn-secondary transition">
+        My Tickets
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-header text-white py-4 mt-12">
+    <div class="container mx-auto px-4 text-center text-sm">
+      © 2025 Shalom Laboratory — All Rights Reserved
+    </div>
+  </footer>
+
+</body>
+</html>

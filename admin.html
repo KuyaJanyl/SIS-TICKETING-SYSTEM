@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard - Shalom Ticket System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <!-- Firebase Firestore SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-indigo-700 text-white shadow">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Shalom Ticket System - Admin</h1>
+      <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 transition px-4 py-2 rounded-md text-sm font-medium">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow container mx-auto px-4 py-6">
+    <section class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold text-indigo-700 text-center mb-6">Manage Tickets</h2>
+
+      <!-- Filters -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <select id="filterBranch" class="border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-indigo-500">
+          <option value="">All Branches</option>
+          <option value="Pallocan">Pallocan West Batangas City</option>
+          <option value="Zenaida">Zenaida Arcade Batangas Cit</option>
+          <option value="Bauan">Bauan Batangas</option>
+          <option value="Rosario">Rosario Batangas</option>
+           <option value="Padre Garcia">Padre Garcia Batangas</option>
+        </select>
+
+        <select id="filterDepartment" class="border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-indigo-500">
+          <option value="">All Departments</option>
+          <option value="IT">IT</option>
+          <option value="HR">HR</option>
+          <option value="Finance">Finance</option>
+          <option value="Operations">Operations</option>
+        </select>
+
+        <select id="filterStatus" class="border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-indigo-500">
+          <option value="">All Statuses</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Closed">Closed</option>
+          <option value="Sent">Sent</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto rounded-lg">
+        <table class="min-w-full bg-white">
+          <thead class="bg-indigo-600 text-white text-sm">
+            <tr>
+              <th class="text-left py-3 px-4">Name</th>
+              <th class="text-left py-3 px-4">Email</th>
+              <th class="text-left py-3 px-4">Branch</th>
+              <th class="text-left py-3 px-4">Department</th>
+              <th class="text-left py-3 px-4">Concern</th>
+              <th class="text-left py-3 px-4">Status</th>
+              <th class="text-left py-3 px-4">Date</th>
+              <th class="text-left py-3 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ticketsTableBody" class="divide-y divide-gray-200 text-sm">
+            <!-- Tickets rendered here -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-indigo-700 text-white text-center py-4">
+    <p class="text-sm">&copy; 2025 Shalom Laboratory — All rights reserved</p>
+  </footer>
+
+  <!-- Script -->
+  <script>
+    // Firebase config - replace with your actual credentials
+    const firebaseConfig = {
+      apiKey: "AIzaSyDvtwYFWIYqyoOA3fB3d9LfNadMPwB04aU",
+      authDomain: "shalomlabapps.firebaseapp.com",
+      databaseURL: "https://shalomlabapps-default-rtdb.firebaseio.com",
+      projectId: "shalomlabapps",
+      storageBucket: "shalomlabapps.firebasestorage.app",
+      messagingSenderId: "491098279306",
+      appId: "1:491098279306:web:ab80d08ab64b27ae80cc73",
+      measurementId: "G-2J6GD16PK9"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const ticketsTableBody = document.getElementById('ticketsTableBody');
+    const filterBranch = document.getElementById('filterBranch');
+    const filterDepartment = document.getElementById('filterDepartment');
+    const filterStatus = document.getElementById('filterStatus');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (!localStorage.getItem('isAdminLoggedIn')) {
+      alert('You are not logged in! Redirecting...');
+      window.location.href = 'login.html';
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('isAdminLoggedIn');
+      alert('Logged out successfully.');
+      window.location.href = 'login.html';
+    });
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+    }
+
+    let tickets = [];
+
+    function renderTickets() {
+      const filtered = tickets.filter(ticket => {
+        return (
+          (!filterBranch.value || ticket.branch === filterBranch.value) &&
+          (!filterDepartment.value || ticket.department === filterDepartment.value) &&
+          (!filterStatus.value || ticket.status === filterStatus.value)
+        );
+      });
+
+      ticketsTableBody.innerHTML = '';
+
+      filtered.forEach((ticket, i) => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td class="py-2 px-4">${escapeHtml(ticket.name)}</td>
+          <td class="py-2 px-4">${escapeHtml(ticket.email)}</td>
+          <td class="py-2 px-4">${escapeHtml(ticket.branch)}</td>
+          <td class="py-2 px-4">${escapeHtml(ticket.department)}</td>
+          <td class="py-2 px-4 whitespace-pre-wrap">${escapeHtml(ticket.concern)}</td>
+          <td class="py-2 px-4">${escapeHtml(ticket.status)}</td>
+          <td class="py-2 px-4">${
+            ticket.date ? new Date(ticket.date).toLocaleString() : 'N/A'
+          }</td>
+          <td class="py-2 px-4 space-x-1">
+            <button data-id="${ticket.id}" class="editBtn bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit</button>
+            <button data-id="${ticket.id}" class="deleteBtn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">Delete</button>
+            <button data-id="${ticket.id}" class="sendBtn bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs">Send</button>
+          </td>
+        `;
+        ticketsTableBody.appendChild(tr);
+      });
+    }
+
+    function subscribeToTickets() {
+      db.collection('tickets').orderBy('date', 'desc').onSnapshot(snapshot => {
+        tickets = [];
+        snapshot.forEach(doc => {
+          tickets.push({ id: doc.id, ...doc.data() });
+        });
+        renderTickets();
+      }, error => {
+        console.error("Error fetching tickets:", error);
+      });
+    }
+
+    ticketsTableBody.addEventListener('click', async e => {
+      const target = e.target;
+      const ticketId = target.getAttribute('data-id');
+      if (!ticketId) return;
+
+      if (target.classList.contains('deleteBtn')) {
+        if (confirm('Delete this ticket?')) {
+          try {
+            await db.collection('tickets').doc(ticketId).delete();
+            alert('Ticket deleted successfully.');
+          } catch (err) {
+            alert('Failed to delete ticket: ' + err.message);
+          }
+        }
+      } else if (target.classList.contains('editBtn')) {
+        alert('Edit feature coming soon!');
+      } else if (target.classList.contains('sendBtn')) {
+        try {
+          const ticketRef = db.collection('tickets').doc(ticketId);
+          const ticketDoc = await ticketRef.get();
+          if (!ticketDoc.exists) {
+            alert('Ticket not found.');
+            return;
+          }
+          const currentStatus = ticketDoc.data().status;
+          if (currentStatus === 'Sent') {
+            alert('Already sent.');
+            return;
+          }
+          await ticketRef.update({ status: 'Sent' });
+          alert(`Email sent to ${ticketDoc.data().email}:\n\nDear ${ticketDoc.data().name}, your issue has been resolved. Thank you!`);
+        } catch (err) {
+          alert('Failed to update status: ' + err.message);
+        }
+      }
+    });
+
+    [filterBranch, filterDepartment, filterStatus].forEach(el => {
+      el.addEventListener('change', renderTickets);
+    });
+
+    subscribeToTickets();
+  </script>
+</body>
+</html>

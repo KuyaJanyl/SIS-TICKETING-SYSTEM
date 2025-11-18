@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login - Shalom Ticket System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Light Teal & Green Theme */
+    .left-panel {
+      background: linear-gradient(135deg, #b2f5ea, #a7f3d0); /* light teal to light green */
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDvtwYFWIYqyoOA3fB3d9LfNadMPwB04aU",
+      authDomain: "shalomlabapps.firebaseapp.com",
+      databaseURL: "https://shalomlabapps-default-rtdb.firebaseio.com",
+      projectId: "shalomlabapps",
+      storageBucket: "shalomlabapps.firebasestorage.app",
+      messagingSenderId: "491098279306",
+      appId: "1:491098279306:web:ab80d08ab64b27ae80cc73",
+      measurementId: "G-2J6GD16PK9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.firebaseAuth = getAuth(app);
+    window.firebaseDB = getFirestore(app);
+  </script>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+
+  <!-- Header -->
+  <header class="bg-teal-500 text-white py-4 shadow-md">
+    <div class="container mx-auto px-4 flex justify-center">
+      <h1 class="text-2xl font-bold">Shalom Ticket System</h1>
+    </div>
+  </header>
+
+  <div class="flex flex-grow">
+    <!-- Left Side -->
+    <div class="left-panel hidden md:flex w-1/2 flex-col justify-center items-center text-gray-800 p-8">
+      <img src="shalomlaboratorylogo.png" alt="Shalom Laboratory Logo" class="w-32 mb-6 drop-shadow-md">
+      <h1 class="text-3xl font-bold text-center">Shalom Laboratory</h1>
+      <p class="text-lg text-center mt-2">Ang Lab na Para Sayo</p>
+    </div>
+
+    <!-- Right Side -->
+    <div class="flex w-full md:w-1/2 justify-center items-center p-6 bg-white">
+      <div class="bg-white shadow-lg rounded-lg p-8 max-w-md w-full border border-gray-200">
+        <h2 class="text-xl font-semibold mb-8 text-center text-teal-700">Login</h2>
+
+        <form id="loginForm" class="space-y-6" autocomplete="off">
+          <div>
+            <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400"
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <div>
+            <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-400"
+              placeholder="********"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-teal-500 text-white font-semibold py-2 rounded-md hover:bg-teal-600 transition"
+          >
+            Log In
+          </button>
+
+          <div class="flex justify-between items-center mt-4">
+            <a href="signup.html" class="text-teal-600 hover:underline text-sm">Sign Up</a>
+            <a href="#" id="forgotPassword" class="text-red-500 hover:underline text-sm">Forgot Password?</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-teal-500 text-white py-3 text-center text-sm">
+    © 2025 Shalom Laboratory — All Rights Reserved
+  </footer>
+
+  <!-- JS -->
+  <script type="module">
+    import { signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+    const auth = window.firebaseAuth;
+    const db = window.firebaseDB;
+
+    const loginForm = document.getElementById('loginForm');
+    const forgotPasswordBtn = document.getElementById('forgotPassword');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = loginForm.email.value.trim();
+      const password = loginForm.password.value.trim();
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (!userDoc.exists()) {
+          alert("No user record found. Please contact the administrator.");
+          return;
+        }
+
+        const userData = userDoc.data();
+        if (userData.role === "admin") {
+          localStorage.setItem('isAdminLoggedIn', 'true');
+          alert('Login successful! Redirecting to Admin Dashboard...');
+          window.location.href = 'admin.html';
+        } else {
+          localStorage.setItem('isUserLoggedIn', 'true');
+          alert('Login successful! Redirecting to Homepage...');
+          window.location.href = 'dashboard.html';
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    });
+
+    forgotPasswordBtn.addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        alert("Please enter your email first.");
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert('Password reset email sent!');
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    });
+  </script>
+</body>
+</html>

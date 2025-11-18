@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Submit a Ticket - Shalom Ticket System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase App (core SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <!-- Firebase Firestore SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-indigo-50 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-indigo-700 text-white shadow-md py-6">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-3xl font-semibold">Shalom Ticket System</h1>
+    </div>
+  </header>
+
+  <main class="container mx-auto p-6 flex-grow">
+
+    <!-- Submit Ticket Form Only -->
+    <section class="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8 mb-10">
+      <h2 class="text-2xl font-bold mb-6 text-indigo-800 text-center">Submit a Ticket</h2>
+      <form id="ticketForm" class="space-y-6">
+        <div>
+          <label for="name" class="block text-gray-700 mb-2">Name</label>
+          <input id="name" name="name" type="text" required class="w-full border border-gray-300 rounded-md px-3 py-2" />
+        </div>
+
+        <div>
+          <label for="email" class="block text-gray-700 mb-2">Email</label>
+          <input id="email" name="email" type="email" required class="w-full border border-gray-300 rounded-md px-3 py-2" />
+        </div>
+
+        <div>
+          <label for="branch" class="block text-gray-700 mb-2">Branch</label>
+          <select id="branch" name="branch" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+            <option value="" disabled selected>Select a branch</option>
+            <option value="North">Zenaida Arcade Batangas City</option>
+            <option value="South">Pallocan Kanluran Batangas City</option>
+            <option value="East">Bauan Batangas</option>
+            <option value="West">Padre Garcia  Batangas</option>
+            <option value="West">Rosario Batangas</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="department" class="block text-gray-700 mb-2">Department</label>
+          <select id="department" name="department" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+            <option value="" disabled selected>Select a department</option>
+            <option value="IT">IT</option>
+            <option value="HR">HR</option>
+            <option value="Finance">Finance</option>
+            <option value="Operations">Laboratory</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="concern" class="block text-gray-700 mb-2">Concern / Issue</label>
+          <textarea id="concern" name="concern" rows="4" required class="w-full border border-gray-300 rounded-md px-3 py-2"></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-md hover:bg-indigo-700">
+          Submit Ticket
+        </button>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-indigo-700 text-white py-4 mt-12">
+    <div class="container mx-auto text-center text-sm">
+      Shalom Laboratory 2025 — All rights reserved
+    </div>
+  </footer>
+
+<script>
+  // Your Firebase config - REPLACE these values with your own from Firebase Console!
+  const firebaseConfig = {
+    apiKey: "AIzaSyDvtwYFWIYqyoOA3fB3d9LfNadMPwB04aU",
+    authDomain: "shalomlabapps.firebaseapp.com",
+    projectId: "shalomlabapps",
+    storageBucket: "shalomlabapps.firebasestorage.app",
+    messagingSenderId: "491098279306",
+    appId: "1:491098279306:web:ab80d08ab64b27ae80cc73",
+    measurementId: "G-2J6GD16PK9"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  // Initialize Firestore
+  const db = firebase.firestore();
+
+  const ticketForm = document.getElementById('ticketForm');
+
+  ticketForm.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const formData = new FormData(ticketForm);
+
+    const ticket = {
+      name: formData.get('name').trim(),
+      email: formData.get('email').trim(),
+      branch: formData.get('branch'),
+      department: formData.get('department'),
+      status: 'Open',
+      concern: formData.get('concern').trim(),
+      date: new Date().toISOString()
+    };
+
+    // Save ticket to Firestore collection "tickets"
+    db.collection('tickets').add(ticket)
+      .then(() => {
+        alert("Ticket submitted successfully!");
+        ticketForm.reset();
+      })
+      .catch(error => {
+        alert("Error submitting ticket: " + error.message);
+      });
+  });
+</script>
+
+</body>
+</html>
